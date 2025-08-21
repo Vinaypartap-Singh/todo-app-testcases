@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { ZodError } from "zod";
+import z, { ZodError } from "zod";
 import { prisma } from "../config/db.config";
 import {
   CREATE_TODO_VALIDATION,
@@ -21,9 +21,14 @@ TodoRouter.post("/", async (req: Request, res: Response) => {
     });
 
     return res.status(200).json({ message: "Todo Created", todo });
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof ZodError) {
-      return res.status(400).json({ message: "Validation Error" });
+      const flattendErrors = z.flattenError(error);
+      console.log(flattendErrors.fieldErrors);
+      return res.status(400).json({
+        message: "Validation Error",
+        error: flattendErrors.fieldErrors,
+      });
     } else {
       return res.status(400).json({ message: "Cannot create todo" });
     }
